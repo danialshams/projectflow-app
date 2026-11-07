@@ -111,8 +111,8 @@ export default function Dashboard({ userName, demoMode = false }: { userName: st
         {active === "finance" && <FinanceView {...props}/>}
         {active === "reports" && <ReportsView {...props}/>}
         {active === "templates" && <TemplatesView {...props} navigate={navigate}/>}
-        {active === "portal" && (demoMode ? <DemoPortalView data={data}/> : <PortalAdminView {...props}/>) }
-        {active === "automation" && (demoMode ? <DemoAutomationView data={data}/> : <AutomationView/>)}
+        {active === "portal" && (demoMode ? <DemoPortalView data={data!}/> : <PortalAdminView {...props}/>) }
+        {active === "automation" && (demoMode ? <DemoAutomationView data={data!}/> : <AutomationView/>)}
         {active === "settings" && <SettingsView {...props} userName={userName}/>}
       </> : null}
       <footer className="app-footer">ProjectFlow <span>·</span> مدیریت یکپارچه پروژه‌ها</footer></div></div>
