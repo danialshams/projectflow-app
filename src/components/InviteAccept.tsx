@@ -1,0 +1,9 @@
+"use client";
+import { useState } from "react";
+import Link from "next/link";
+import { FolderKanban, UsersRound, ArrowLeft } from "lucide-react";
+export default function InviteAccept({token,valid,workspaceName,invitedEmail,signedIn,email}:{token:string;valid:boolean;workspaceName:string;invitedEmail:string;signedIn:boolean;email:string}) {
+  const [busy,setBusy]=useState(false);const [error,setError]=useState("");const destination=`/invite/${token}`;
+  async function accept(){setBusy(true);try{const r=await fetch("/api/invitations/accept",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({token})});const d=await r.json();if(!r.ok)throw new Error(d.error||"خطا");window.location.assign("/dashboard")}catch(e){setError(e instanceof Error?e.message:"خطا");setBusy(false)}}
+  return <main className="invite-page"><div className="invite-card"><div className="brand-mark"><FolderKanban size={24}/></div><div className="invite-symbol"><UsersRound size={26}/></div><h1>{valid?"دعوت به فضای کاری":"دعوت‌نامه نامعتبر"}</h1><p>{valid?`شما برای عضویت در «${workspaceName}» دعوت شده‌اید.`:"این دعوت‌نامه استفاده شده، منقضی شده یا معتبر نیست."}</p>{valid&&<><div className="invite-detail"><span>ایمیل دعوت‌شده</span><strong dir="ltr">{invitedEmail}</strong></div>{!signedIn?<Link className="btn btn-primary" href={`/login?callbackUrl=${encodeURIComponent(destination)}`}>ورود و پذیرش دعوت <ArrowLeft size={17}/></Link>:email.toLowerCase()!==invitedEmail?<p className="form-error">با حساب {email} وارد شده‌اید؛ ابتدا با حساب {invitedEmail} وارد شوید.</p>:<button disabled={busy} onClick={()=>void accept()} className="btn btn-primary">{busy?"در حال عضویت...":"پذیرش دعوت‌نامه"} <ArrowLeft size={17}/></button>}</>}{error&&<p className="form-error">{error}</p>}<Link href="/dashboard" className="invite-home">بازگشت به پنل</Link></div></main>;
+}

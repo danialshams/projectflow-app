@@ -1,0 +1,39 @@
+name: Check
+on:
+  pull_request:
+  push:
+    branches: [main]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: project
+          POSTGRES_PASSWORD: testpassword
+          POSTGRES_DB: project_management
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U project -d project_management"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgresql://project:testpassword@127.0.0.1:5432/project_management?schema=public
+      NEXTAUTH_URL: http://localhost:3000
+      NEXTAUTH_SECRET: ci-only-long-random-key-not-used-in-production-12345
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+      - name: Apply migrations
+        run: npm run db:migrate
+      - name: Generate client and check TypeScript
+        run: npm run db:generate && npm run typecheck
+      - name: Build
+        run: npm run build
