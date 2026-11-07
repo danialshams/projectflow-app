@@ -37,3 +37,15 @@ jobs:
         run: npm run db:generate && npm run typecheck
       - name: Build
         run: npm run build
+
+      - name: Client portal isolation and one-time invitation smoke test
+        run: |
+          npm run start >/tmp/projectflow-server.log 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid" 2>/dev/null || true' EXIT
+          for i in $(seq 1 60); do
+            if curl -fsS http://127.0.0.1:3000/api/health >/dev/null; then break; fi
+            sleep 1
+          done
+          curl -fsS http://127.0.0.1:3000/api/health
+          node scripts/portal-smoke.mjs
