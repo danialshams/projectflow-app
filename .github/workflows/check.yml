@@ -35,6 +35,8 @@ jobs:
         run: npm run db:migrate
       - name: Generate client and check TypeScript
         run: npm run db:generate && npm run typecheck
+      - name: Unit tests
+        run: npm run test:unit
       - name: Build
         run: npm run build
 
