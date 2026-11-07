@@ -374,7 +374,10 @@ model ClientPortalComment {
   @@index([projectId, createdAt])
 }
 
-enum ApprovalActorKind { TEAM CLIENT }
+enum ApprovalActorKind {
+  TEAM
+  CLIENT
+}
 model ApprovalStep {
   id String @id @default(cuid())
   approvalId String
