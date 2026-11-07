@@ -49,3 +49,6 @@
 .portal-revoke{font-size:10px;background:none;border:0;color:#c36e78;cursor:pointer}.portal-revoke:disabled{opacity:.5}
 .client-portal-error{margin:8px 20px}.portal-row-actions .btn{white-space:nowrap}
 @media(max-width:720px){.portal-shell{padding:16px}.portal-hero{align-items:flex-start;flex-direction:column}.portal-hero h1{font-size:23px}.portal-project-grid{grid-template-columns:1fr}.portal-entry{padding:25px;margin-top:9vh}.portal-project{padding:18px}.portal-hero{margin:16px 0}.portal-link-panel{margin:0 10px 15px}}
+
+.notice-read-all{border:0;background:transparent;color:#5378cc;font-size:10px;cursor:pointer;white-space:nowrap;padding:3px}
+.notice-read-all:hover{text-decoration:underline}
