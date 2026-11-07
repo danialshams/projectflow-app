@@ -2,7 +2,7 @@ import { db } from "@/lib/db";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { asResponse, context, parseJson, requireWrite, getProject, getTask, logActivity, HttpError } from "@/lib/access";
-export const taskSchema = z.object({ projectId: z.string().cuid(), title: z.string().trim().min(2).max(180), description: z.string().max(6000).default(""), status: z.enum(["TODO", "IN_PROGRESS", "REVIEW", "DONE"]).default("TODO"), priority: z.enum(["LOW", "MEDIUM", "HIGH", "URGENT"]).default("MEDIUM"), assigneeId: z.string().cuid().nullable().optional(), parentId: z.string().cuid().nullable().optional(), dueAt: z.string().datetime().nullable().optional(), estimatedMinutes: z.number().int().min(0).max(100000).default(0) });
+const taskSchema = z.object({ projectId: z.string().cuid(), title: z.string().trim().min(2).max(180), description: z.string().max(6000).default(""), status: z.enum(["TODO", "IN_PROGRESS", "REVIEW", "DONE"]).default("TODO"), priority: z.enum(["LOW", "MEDIUM", "HIGH", "URGENT"]).default("MEDIUM"), assigneeId: z.string().cuid().nullable().optional(), parentId: z.string().cuid().nullable().optional(), dueAt: z.string().datetime().nullable().optional(), estimatedMinutes: z.number().int().min(0).max(100000).default(0) });
 export async function POST(req: Request) {
   try {
     const c = await context(); requireWrite(c.role);
