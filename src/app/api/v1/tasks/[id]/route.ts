@@ -1,4 +1,5 @@
 import { db } from "@/lib/db";
+import { wouldCreateTaskCycle } from "@/lib/task-hierarchy";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { asResponse, context, parseJson, requireWrite, getTask, logActivity, HttpError } from "@/lib/access";
@@ -10,7 +11,16 @@ export async function PATCH(req: Request, { params }: Params) {
     const { id } = await params; const old = await getTask(id, c.workspaceId);
     const data = await parseJson(req, schema);
     if (data.assigneeId && !(await db.membership.findUnique({ where: { workspaceId_userId: { workspaceId: c.workspaceId, userId: data.assigneeId } } }))) throw new HttpError(400, "مسئول باید عضو تیم باشد.");
-    if (data.parentId) { if (data.parentId === id) throw new HttpError(400, "وظیفه نمی‌تواند زیرکار خودش باشد."); const parent = await getTask(data.parentId, c.workspaceId); if (parent.projectId !== old.projectId || parent.parentId === id) throw new HttpError(400, "زیرکار نامعتبر است."); }
+    if (data.parentId) {
+      const parent = await getTask(data.parentId, c.workspaceId);
+      if (parent.projectId !== old.projectId) throw new HttpError(400, "زیرکار باید متعلق به همین پروژه باشد.");
+      const createsCycle = await wouldCreateTaskCycle(id, data.parentId, async (ancestorId) => {
+        const ancestor = await getTask(ancestorId, c.workspaceId);
+        if (ancestor.projectId !== old.projectId) throw new HttpError(400, "ساختار زیرکار نامعتبر است.");
+        return ancestor.parentId;
+      });
+      if (createsCycle) throw new HttpError(409, "این تغییر یک چرخه در زیرکارها ایجاد می‌کند.");
+    }
     const task = await db.task.update({ where: { id }, data: { ...data, dueAt: data.dueAt === undefined ? undefined : data.dueAt ? new Date(data.dueAt) : null } });
     await logActivity(c.workspaceId, c.userId, "UPDATE", "TASK", id, `وظیفه «${task.title}» ویرایش شد`);
     if (data.assigneeId && data.assigneeId !== old.assigneeId && data.assigneeId !== c.userId) await db.notification.create({ data: { workspaceId: c.workspaceId, userId: data.assigneeId, title: "وظیفه به شما واگذار شد", body: task.title, href: "/dashboard/tasks" } });
