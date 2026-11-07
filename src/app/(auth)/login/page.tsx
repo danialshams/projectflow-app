@@ -1,4 +1,3 @@
-import { getAuth } from "@/lib/auth";
 import { redirect } from "next/navigation";
-import AuthForm from "@/components/AuthForm";
-export default async function Page() { const session = await getAuth(); if (session?.user) redirect("/dashboard"); return <AuthForm mode="login" />; }
+// Login UI is temporarily hidden; public visitors see the read-only demo.
+export default function LoginPage() { redirect("/dashboard"); }

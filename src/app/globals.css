@@ -75,3 +75,34 @@
 @media(max-width:750px){.portal-top{padding:15px}.portal-profile{font-size:13px}.portal-brand{font-size:17px}.portal-brand small{display:none}.portal-body{padding:22px 14px 45px}.portal-grid{grid-template-columns:1fr}.portal-pad{padding:17px}.portal-row{align-items:flex-start}.portal-metrics{gap:12px}.portal-heading h1{font-size:23px}}
 .advanced-stack{display:grid;gap:20px}.advanced-inline{display:flex;align-items:end;gap:14px;flex-wrap:wrap}.advanced-inline .form-field{flex:1;min-width:230px}.advanced-inline .btn{margin-bottom:0}.advanced-stack .panel-header{margin-bottom:20px}.advanced-stack .portal-line small{display:block}
 .approval-builder{display:grid;gap:10px;width:100%}.approval-step-input{display:flex;align-items:center;gap:8px}.approval-step-input>span{background:#edf2ff;color:#4972d7;border-radius:9px;padding:7px}.approval-step-input select{flex:1;min-width:0}.approval-client-toggle{display:flex;align-items:center;gap:10px;font-size:13px;color:#475877}.approval-client-toggle input{width:17px;height:17px}.approval-stage-list{display:grid;gap:6px;margin-top:10px;font-size:12px;color:#7a8698}.approval-stage-list span.done{color:#1b9e83}
+
+
+/* Isolated, public ProjectFlow demonstration: navigation and filters remain interactive,
+   while every write, upload, and invitation control is hidden. The server is authoritative. */
+.demo-readonly .demo-sidebar-note{padding:12px 14px;margin:0 10px 10px;border-radius:12px;background:#eef3ff;color:#516eae;font-size:12px;line-height:1.9}
+.demo-readonly .workspace-picker:disabled{cursor:default;opacity:1}
+.demo-public-banner{display:flex;align-items:center;gap:13px;flex-wrap:wrap;background:#ebf2ff;border:1px solid #d9e6ff;color:#3d5f9e;padding:13px 18px;border-radius:13px;margin-bottom:20px;font-size:12px;line-height:1.9}
+.demo-public-banner strong{font-size:13px;color:#2e50a0}
+.demo-readonly .heading-action,.demo-readonly .add-project-card,.demo-readonly .project-edit-btn,
+.demo-readonly .kanban-add,.demo-readonly .inline-add,.demo-readonly .approval-actions .action-buttons,
+.demo-readonly .content-container button.btn,.demo-readonly .content-container .upload-controls,
+.demo-readonly .content-container .template-maker,.demo-readonly .template-card .project-open-btn,
+.demo-readonly .kanban-column-head button,.demo-readonly .mobile-status,.demo-readonly .portal-row-actions{display:none!important}
+.demo-dialog-overlay{position:fixed;inset:0;z-index:1100;background:#12233f78;display:flex;align-items:center;justify-content:center;padding:18px}
+.demo-dialog{width:min(580px,100%);max-height:85dvh;overflow:auto;background:white;border-radius:20px;padding:24px;box-shadow:0 30px 90px #162a5133}
+.demo-dialog-head{display:flex;align-items:center;justify-content:space-between;color:#7181a0;font-size:12px;margin-bottom:14px}
+.demo-dialog-head button{border:0;background:#f2f5fb;border-radius:9px;width:32px;height:32px;cursor:pointer}
+.demo-dialog h2{font-size:21px;color:#233c69;margin:0 0 10px}.demo-task-description{font-size:13px;line-height:2;color:#7888a2}
+.demo-task-facts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:22px 0}
+.demo-task-facts>div{background:#f7f9fd;border:1px solid #edf0f8;border-radius:11px;padding:11px;display:flex;flex-direction:column;gap:6px}
+.demo-task-facts span{font-size:11px;color:#8a98b1}.demo-task-facts b{font-size:12px;color:#243954;font-weight:650}
+.demo-checklist{border-top:1px solid #edf0f8;padding-top:15px}.demo-checklist h3{font-size:14px;margin-bottom:12px}
+.demo-checklist>div{display:flex;align-items:center;gap:9px;font-size:12px;margin:8px 0;color:#56687f}
+.demo-dialog-note{font-size:11px;color:#7890b8;line-height:2;margin-top:16px}
+.demo-portal-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;margin-top:20px}
+.demo-portal-item,.demo-service{background:#f8faff;border:1px solid #e7ecf8;border-radius:13px;padding:18px;display:flex;flex-direction:column;gap:8px}
+.demo-portal-item strong,.demo-service strong{font-size:14px;color:#294778}.demo-portal-item small,.demo-service small{font-size:11px;color:#7c8da9}
+.demo-portal-item>div{margin-top:8px}.demo-portal-item>div>div{padding:8px 0;border-top:1px solid #e8edf7;display:flex;justify-content:space-between;gap:8px;font-size:12px}
+.demo-portal-item em{font-size:11px;color:#6b86ae;font-style:normal;white-space:nowrap}
+.demo-service svg{color:#5679cf;margin-bottom:4px}
+@media(max-width:600px){.demo-public-banner{align-items:flex-start;flex-direction:column;gap:3px}.demo-task-facts{grid-template-columns:1fr 1fr}.demo-dialog{padding:18px}}
