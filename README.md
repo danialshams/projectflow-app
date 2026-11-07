@@ -62,3 +62,22 @@
 
 ## اعلان‌های به‌روزشونده
 داشبورد هر ۲۰ ثانیه، فقط در زمان فعال بودن زبانه مرورگر، اعلان‌های همان کاربر و فضای کاری را دریافت می‌کند؛ بدون بارگذاری مجدد داده‌های سنگین پروژه‌ها. همچنین امکان «خواندن همه» وجود دارد. این شیوه Polling نزدیک‌به‌لحظه‌ای است و **SSE/WebSocket واقعی نیست**.
+
+
+## Customer portal and notifications (completion stage)
+
+- Workspace managers open **پرتال مشتری** in the sidebar, select a project with an assigned client and email, and create a single-use client invitation. The link allows access to all projects owned by that client. The invitation expires after seven days.
+- Invited clients activate a one-time, seven-day link at `/portal/activate/{token}`. Their 14-day httpOnly session cookie is separate from staff/NextAuth accounts. The existing passwordless invitation model is retained. Portal data is scoped to the Client record for the invitation, and clients see only projects linked to that Client. Managers may revoke sessions.
+- Requests for approval now accept ordered `reviewerIds` and an optional `includeClient` final step. Only the reviewer for the current step may approve it. Client review is available within the portal, and every decision is stored with a note and timestamp.
+- Internal notifications use SSE (`/api/v1/notifications/stream`); the client reconnects automatically and uses a visibility-aware polling fallback. SSE connections expire after ~22 seconds to support serverless hosting. Do not assume this is a durable push notification system when the browser is closed.
+- Idempotent due-date notifications are generated through `/api/cron/tick`. On Vercel Hobby the scheduled task runs **once daily** at 08:00 UTC. Managers may use the manual check in **اعلان‌ها و اتصال‌ها**. A 25-hour reminder window means it is not a precise per-minute alarm.
+- Email/SMS requests enter `DeliveryJob`. Until an external gateway is configured, they remain in `WAITING_CONFIG` and are not discarded. Provider adapters use HTTPS JSON `POST {to, subject, message}` with `Authorization: Bearer <TOKEN>`; configure `EMAIL_GATEWAY_URL/TOKEN` or `SMS_GATEWAY_URL/TOKEN` when you purchase a provider. They can point to any custom bridge for domestic providers. Set the gateway URL only to a trusted service. Failures retry with bounded backoff and are auditable.
+- S3 storage remains optional and uses portable S3-compatible credentials.
+
+### Required deployment variables
+
+`DATABASE_URL`, `NEXTAUTH_URL`, `NEXTAUTH_SECRET` must be set for production. For automated reminders also set `CRON_SECRET` to a random high-entropy string (minimum 24 characters). Do not expose secrets as `NEXT_PUBLIC_*`. The Vercel cron attaches `Authorization: Bearer <CRON_SECRET>` automatically. When migrating to a dedicated host, invoke `/api/cron/tick` with this header once daily from the host scheduler.
+
+### Verification
+
+Run `npm run db:migrate`, `npm run db:generate`, `npm run typecheck`, `npm run build`. On a disposable database, `INTEGRATION_TESTS=true npm run test:integration` covers grant isolation, serialized approval stages, reminder deduplication and queued provider behavior. Never run integration tests against production data.

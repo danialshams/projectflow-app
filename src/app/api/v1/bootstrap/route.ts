@@ -11,7 +11,7 @@ export async function GET() {
       db.task.findMany({ where: { project: { workspaceId: c.workspaceId } }, include: { checklists: { orderBy: { position: "asc" } }, dependencies: { select: { dependsOnId: true } }, _count: { select: { comments: true, attachments: true } }, assignee: { select: { name: true, avatarColor: true } } }, orderBy: [{ position: "asc" }, { createdAt: "desc" }] }),
       db.membership.findMany({ where: { workspaceId: c.workspaceId }, include: { user: { select: { id: true, name: true, email: true, avatarColor: true } } } }),
       db.client.findMany({ where: { workspaceId: c.workspaceId }, orderBy: { createdAt: "desc" } }),
-      db.approval.findMany({ where: { project: { workspaceId: c.workspaceId } }, orderBy: { createdAt: "desc" } }),
+      db.approval.findMany({ where: { project: { workspaceId: c.workspaceId } }, include: { steps: { orderBy: { sequence: "asc" } } }, orderBy: { createdAt: "desc" } }),
       db.timeEntry.findMany({ where: { task: { project: { workspaceId: c.workspaceId } } }, orderBy: { createdAt: "desc" }, take: 250 }),
       db.activity.findMany({ where: { workspaceId: c.workspaceId }, include: { actor: { select: { name: true, avatarColor: true } } }, orderBy: { createdAt: "desc" }, take: 30 }),
       db.notification.findMany({ where: { workspaceId: c.workspaceId, userId: c.userId }, orderBy: { createdAt: "desc" }, take: 30 }),

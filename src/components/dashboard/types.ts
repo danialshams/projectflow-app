@@ -7,7 +7,8 @@ export interface ChecklistItem { id: string; title: string; checked: boolean }
 export interface Task { id: string; projectId: string; parentId: string | null; title: string; description: string; status: TaskStatus; priority: Priority; assigneeId: string | null; assignee: { name: string; avatarColor: string } | null; dueAt: string | null; startAt: string | null; estimatedMinutes: number; createdAt: string; checklists: ChecklistItem[]; dependencies: { dependsOnId: string }[]; _count: { comments: number; attachments: number } }
 export interface Member { id: string; userId: string; role: string; user: { id: string; name: string; email: string; avatarColor: string } }
 export interface Client { id: string; name: string; email: string | null; phone: string | null; company: string | null; notes: string | null; createdAt: string }
-export interface Approval { id: string; projectId: string; taskId: string | null; title: string; description: string; status: "PENDING" | "APPROVED" | "REJECTED"; requesterId: string; reviewerId: string | null; decisionNote: string; createdAt: string }
+export interface ApprovalStep {id:string;sequence:number;kind:"TEAM"|"CLIENT";reviewerId:string|null;clientId:string|null;status:"PENDING"|"APPROVED"|"REJECTED";decisionNote:string;decidedAt:string|null}
+export interface Approval { id: string; projectId: string; taskId: string | null; title: string; description: string; status: "PENDING" | "APPROVED" | "REJECTED"; requesterId: string; reviewerId: string | null; decisionNote: string; createdAt: string; steps: ApprovalStep[] }
 export interface Entry { id: string; taskId: string; userId: string; minutes: number; note: string; createdAt: string; startedAt: string }
 export interface Activity { id: string; action: string; summary: string; createdAt: string; actor: { name: string; avatarColor: string } }
 export interface Notice { id: string; title: string; body: string; href: string; readAt: string | null; createdAt: string }

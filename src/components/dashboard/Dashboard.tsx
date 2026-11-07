@@ -3,20 +3,21 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { signOut } from "next-auth/react";
-import { Activity, ArrowLeft, BarChart3, Bell, CalendarDays, CheckCircle2, ChevronDown, CircleHelp, Clock3, ContactRound, FileStack, FolderKanban, GanttChartSquare, LayoutDashboard, LayoutGrid, ListTodo, LogOut, Menu, Plus, Search, Settings2, ShieldCheck, UsersRound, Wallet, X, Zap } from "lucide-react";
+import { Activity, ArrowLeft, BarChart3, Bell, CalendarDays, CheckCircle2, ChevronDown, CircleHelp, Clock3, ContactRound, FileStack, FolderKanban, GanttChartSquare, LayoutDashboard, LayoutGrid, ListTodo, LogOut, Menu, Plus, Search, Settings2, ShieldCheck, UsersRound, Wallet, X, Zap, UserRoundCheck, BellRing } from "lucide-react";
 import { DashboardData, Task, fmt, faDate } from "./types";
 import { Overview, ProjectsView, TasksView, CalendarView, TimelineView, TeamView, TimeView, ApprovalsView, ClientsView, FinanceView, ReportsView, FilesView, SettingsView, TemplatesView } from "./Views";
 import { CreateModal, DetailModal } from "./Modals";
+import { PortalAdminView, AutomationView } from "./AdvancedViews";
 
-export type ViewName = "overview" | "projects" | "tasks" | "board" | "calendar" | "timeline" | "team" | "time" | "approvals" | "files" | "clients" | "finance" | "reports" | "settings" | "templates";
+export type ViewName = "overview" | "projects" | "tasks" | "board" | "calendar" | "timeline" | "team" | "time" | "approvals" | "files" | "clients" | "finance" | "reports" | "settings" | "templates" | "portal" | "automation";
 const navSections = [
   { title: "محیط کار", links: [ { id: "overview", label: "نمای کلی", icon: LayoutDashboard }, { id: "projects", label: "پروژه‌ها", icon: FolderKanban }, { id: "tasks", label: "وظایف", icon: ListTodo } ] },
   { title: "برنامه‌ریزی", links: [ { id: "board", label: "برد کانبان", icon: LayoutGrid }, { id: "calendar", label: "تقویم", icon: CalendarDays }, { id: "timeline", label: "نمودار گانت", icon: GanttChartSquare }, { id: "templates", label: "قالب‌های پروژه", icon: FileStack } ] },
   { title: "همکاری و تیم", links: [ { id: "team", label: "اعضای تیم", icon: UsersRound }, { id: "time", label: "ثبت زمان", icon: Clock3 }, { id: "approvals", label: "تأییدیه‌ها", icon: ShieldCheck }, { id: "files", label: "فایل‌ها", icon: FileStack } ] },
-  { title: "کسب‌وکار", links: [ { id: "clients", label: "مشتریان", icon: ContactRound }, { id: "finance", label: "امور مالی", icon: Wallet }, { id: "reports", label: "گزارش‌ها", icon: BarChart3 } ] },
+  { title: "کسب‌وکار", links: [ { id: "clients", label: "مشتریان", icon: ContactRound }, { id: "finance", label: "امور مالی", icon: Wallet }, { id: "reports", label: "گزارش‌ها", icon: BarChart3 }, { id: "portal", label: "پرتال مشتری", icon: UserRoundCheck }, { id: "automation", label: "اعلان‌ها و اتصال‌ها", icon: BellRing } ] },
 ] as const;
 const headings: Record<ViewName, [string, string]> = {
-  templates: ["قالب‌های پروژه", "ساخت سریع پروژه‌ها بر اساس ساختارهای آماده"], overview: ["نمای کلی", "تصویری روشن از عملکرد تیم و پروژه‌ها"], projects: ["پروژه‌ها", "تمام پروژه‌ها را در یک نگاه مدیریت کنید"], tasks: ["وظایف", "برنامه‌ریزی و پیگیری ریزترین کارها"], board: ["برد کانبان", "جریان انجام کارها، ساده و شفاف"], calendar: ["تقویم وظایف", "مهلت‌ها و برنامه‌های پیش رو"], timeline: ["نمودار گانت", "زمان‌بندی و پیشرفت پروژه‌ها"], team: ["اعضای تیم", "افراد و نقش‌های فضای کاری"], time: ["ثبت زمان", "مدیریت زمان صرف‌شده برای وظایف"], approvals: ["تأییدیه‌ها", "تصمیم‌ها و درخواست‌های نیازمند بررسی"], files: ["فایل‌ها", "اسناد و فایل‌های مرتبط با وظایف"], clients: ["مشتریان", "اطلاعات و پروژه‌های مشتریان"], finance: ["امور مالی", "بودجه پروژه‌ها، قراردادها و اقساط"], reports: ["گزارش‌ها", "شاخص‌های عملکرد و بهره‌وری تیم"], settings: ["تنظیمات", "مشخصات فضای کاری و حساب شما"],
+  portal: ["پرتال مشتری", "دعوت و مدیریت دسترسی مشتریان به پروژه‌های خود"], automation: ["اعلان‌ها و اتصال سرویس‌ها", "یادآوری‌ها، صف ارسال و اتصال خدمات آینده"], templates: ["قالب‌های پروژه", "ساخت سریع پروژه‌ها بر اساس ساختارهای آماده"], overview: ["نمای کلی", "تصویری روشن از عملکرد تیم و پروژه‌ها"], projects: ["پروژه‌ها", "تمام پروژه‌ها را در یک نگاه مدیریت کنید"], tasks: ["وظایف", "برنامه‌ریزی و پیگیری ریزترین کارها"], board: ["برد کانبان", "جریان انجام کارها، ساده و شفاف"], calendar: ["تقویم وظایف", "مهلت‌ها و برنامه‌های پیش رو"], timeline: ["نمودار گانت", "زمان‌بندی و پیشرفت پروژه‌ها"], team: ["اعضای تیم", "افراد و نقش‌های فضای کاری"], time: ["ثبت زمان", "مدیریت زمان صرف‌شده برای وظایف"], approvals: ["تأییدیه‌ها", "تصمیم‌ها و درخواست‌های نیازمند بررسی"], files: ["فایل‌ها", "اسناد و فایل‌های مرتبط با وظایف"], clients: ["مشتریان", "اطلاعات و پروژه‌های مشتریان"], finance: ["امور مالی", "بودجه پروژه‌ها، قراردادها و اقساط"], reports: ["گزارش‌ها", "شاخص‌های عملکرد و بهره‌وری تیم"], settings: ["تنظیمات", "مشخصات فضای کاری و حساب شما"],
 };
 export type ModalKind = "project" | "editProject" | "task" | "client" | "approval" | "time" | "team" | "contract" | "installment" | null;
 export type ActionProps = { data: DashboardData; action: (method: string, path: string, body?: unknown) => Promise<unknown>; open: (name: ModalKind, context?: string) => void; selectTask: (task: Task) => void; projectFilter: string; setProjectFilter: (id: string) => void };
@@ -56,6 +57,16 @@ export default function Dashboard({ userName }: { userName: string }) {
       window.clearInterval(interval);
       document.removeEventListener("visibilitychange", whenVisible);
     };
+  }, []);
+  useEffect(() => {
+    if(typeof EventSource === "undefined")return;
+    const source=new EventSource("/api/v1/notifications/stream");
+    let initialized=false;
+    source.addEventListener("changed",()=>{
+      if(!initialized){initialized=true;return;}
+      void fetch("/api/v1/notifications",{cache:"no-store"}).then(r=>r.ok?r.json():null).then(payload=>{if(payload?.notifications)setData(current=>current?{...current,notifications:payload.notifications}:current)}).catch(()=>{});
+    });
+    return ()=>source.close();
   }, []);
   useEffect(() => { if (!toast) return; const timeout = setTimeout(() => setToast(""), 3500); return () => clearTimeout(timeout); }, [toast]);
   const action = useCallback(async (method: string, path: string, body?: unknown) => {
@@ -97,6 +108,8 @@ export default function Dashboard({ userName }: { userName: string }) {
         {active === "finance" && <FinanceView {...props}/>}
         {active === "reports" && <ReportsView {...props}/>}
         {active === "templates" && <TemplatesView {...props} navigate={navigate}/>}
+        {active === "portal" && <PortalAdminView {...props}/>}
+        {active === "automation" && <AutomationView/>}
         {active === "settings" && <SettingsView {...props} userName={userName}/>}
       </> : null}
       <footer className="app-footer">ProjectFlow <span>·</span> مدیریت یکپارچه پروژه‌ها</footer></div></div>

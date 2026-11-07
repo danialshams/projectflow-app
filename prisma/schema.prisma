@@ -63,6 +63,7 @@ model User {
   invitationsSent WorkspaceInvitation[] @relation("InvitationCreator")
   projectTemplates ProjectTemplate[] @relation("TemplateCreator")
   clientPortalInvitations ClientPortalInvitation[] @relation("ClientPortalInvitationCreator")
+  approvalSteps ApprovalStep[] @relation("StepReviewer")
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
 }
@@ -109,6 +110,7 @@ model Client {
   contracts   Contract[]
   portalInvitations ClientPortalInvitation[]
   portalSessions ClientPortalSession[]
+  portalComments ClientPortalComment[]
   createdAt   DateTime  @default(now())
   @@index([workspaceId])
 }
@@ -129,6 +131,8 @@ model Project {
   client      Client?       @relation(fields: [clientId], references: [id], onDelete: SetNull)
   tasks       Task[]
   approvals   Approval[]
+  approvalSteps ApprovalStep[]
+  portalComments ClientPortalComment[]
   contracts   Contract[]
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
@@ -227,6 +231,7 @@ model Approval {
   reviewer    User?          @relation("ApprovalReviewer", fields: [reviewerId], references: [id], onDelete: SetNull)
   decisionNote String        @default("")
   decidedAt   DateTime?
+  steps ApprovalStep[]
   createdAt   DateTime       @default(now())
   @@index([projectId, status])
 }
@@ -282,6 +287,7 @@ model Notification {
   body        String    @default("")
   href        String    @default("/dashboard")
   readAt      DateTime?
+  dedupeKey   String?   @unique
   createdAt   DateTime  @default(now())
   @@index([userId, readAt, createdAt])
 }
@@ -355,4 +361,56 @@ model ClientPortalSession {
   revokedAt DateTime?
   createdAt DateTime @default(now())
   @@index([clientId, expiresAt])
+}
+
+model ClientPortalComment {
+  id String @id @default(cuid())
+  projectId String
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  clientId String
+  client Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  body String
+  createdAt DateTime @default(now())
+  @@index([projectId, createdAt])
+}
+
+enum ApprovalActorKind {
+  TEAM
+  CLIENT
+}
+model ApprovalStep {
+  id String @id @default(cuid())
+  approvalId String
+  approval Approval @relation(fields: [approvalId], references: [id], onDelete: Cascade)
+  sequence Int
+  kind ApprovalActorKind @default(TEAM)
+  reviewerId String?
+  reviewer User? @relation("StepReviewer", fields: [reviewerId], references: [id], onDelete: SetNull)
+  clientId String?
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectId String
+  status ApprovalStatus @default(PENDING)
+  decisionNote String @default("")
+  decidedAt DateTime?
+  decidedByClientId String?
+  @@unique([approvalId, sequence])
+  @@index([projectId, status])
+}
+
+// A deduplicated, retryable delivery queue; does not require a paid provider.
+model DeliveryJob {
+  id String @id @default(cuid())
+  uniqueKey String @unique
+  channel String
+  destination String
+  subject String
+  body String
+  status String @default("PENDING")
+  attempts Int @default(0)
+  nextAttemptAt DateTime @default(now())
+  claimedAt DateTime?
+  sentAt DateTime?
+  lastError String?
+  createdAt DateTime @default(now())
+  @@index([status, nextAttemptAt])
 }
