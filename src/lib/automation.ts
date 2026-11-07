@@ -2,7 +2,7 @@ import { db } from "@/lib/db";
 import { queueEmail } from "@/lib/delivery";
 export async function createDueReminders(){
   const now=new Date(), future=new Date(now.getTime()+25*3600_000), past=new Date(now.getTime()-7*86400_000);
-  const tasks=await db.task.findMany({where:{status:{not:"DONE"},assigneeId:{not:null},dueAt:{gte:past,lte:future},project:{status:"ACTIVE"}},select:{id:true,title:true,assigneeId:true,dueAt:true,project:{select:{workspaceId:true,name:true}},assignee:{select:{email:true}}},take:300});
+  const tasks=await db.task.findMany({where:{status:{not:"DONE"},assigneeId:{not:null},dueAt:{gte:past,lte:future},project:{status:"ACTIVE",workspace:{slug:{not:"projectflow-public-demo"}}}},select:{id:true,title:true,assigneeId:true,dueAt:true,project:{select:{workspaceId:true,name:true}},assignee:{select:{email:true}}},take:300});
   let created=0;
   for(const task of tasks){
     if(!task.assigneeId||!task.dueAt)continue;

@@ -81,3 +81,9 @@
 ### Verification
 
 Run `npm run db:migrate`, `npm run db:generate`, `npm run typecheck`, `npm run build`. On a disposable database, `INTEGRATION_TESTS=true npm run test:integration` covers grant isolation, serialized approval stages, reminder deduplication and queued provider behavior. Never run integration tests against production data.
+
+
+## Public read-only demo (temporary)
+The homepage, `/login`, and `/register` now lead to `/dashboard` for visitors without accounts. The unauthenticated dashboard only uses `GET /api/public/demo`, a hard-scoped read-only projection of the `projectflow-public-demo` workspace. Admin APIs still require normal authentication and enforce workspace membership. Public visitors cannot mutate data, upload files, create invitations, or execute automation jobs. Sample accounts use `.invalid` addresses and disabled, non-bcrypt password hashes. **Never store genuine customer information in this public demo workspace.** To restore sign-in, revert the temporary redirects in the home/login/register pages and the guest branch in the dashboard page. The normal private login backend remains intact.
+
+The scheduled reminder worker explicitly excludes `projectflow-public-demo` so fake recipients are never enqueued for real SMS/email providers. CI includes a demo-smoke test for read-only access, isolation from a second workspace and protected private API writes.

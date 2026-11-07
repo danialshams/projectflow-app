@@ -55,3 +55,4 @@ jobs:
           done
           curl -fsS http://127.0.0.1:3000/api/health
           node scripts/portal-smoke.mjs
+          npm run test:demo
