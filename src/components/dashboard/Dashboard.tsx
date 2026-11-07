@@ -33,6 +33,30 @@ export default function Dashboard({ userName }: { userName: string }) {
     finally { setLoading(false); }
   }, []);
   useEffect(() => { void refresh(); }, [refresh]);
+  // Lightweight near-real-time notification updates, without reloading dashboard data.
+  useEffect(() => {
+    let stopped = false;
+    let inFlight = false;
+    async function pollNotifications() {
+      if (stopped || inFlight || document.visibilityState !== "visible") return;
+      inFlight = true;
+      try {
+        const response = await fetch("/api/v1/notifications", { cache: "no-store" });
+        if (!response.ok) return;
+        const payload = await response.json() as { notifications: DashboardData["notifications"] };
+        if (!stopped) setData(current => current ? { ...current, notifications: payload.notifications } : current);
+      } catch { /* The next refresh retries; keep the rest of the UI usable. */ }
+      finally { inFlight = false; }
+    }
+    const whenVisible = () => { if (document.visibilityState === "visible") void pollNotifications(); };
+    const interval = window.setInterval(() => void pollNotifications(), 20000);
+    document.addEventListener("visibilitychange", whenVisible);
+    return () => {
+      stopped = true;
+      window.clearInterval(interval);
+      document.removeEventListener("visibilitychange", whenVisible);
+    };
+  }, []);
   useEffect(() => { if (!toast) return; const timeout = setTimeout(() => setToast(""), 3500); return () => clearTimeout(timeout); }, [toast]);
   const action = useCallback(async (method: string, path: string, body?: unknown) => {
     setBusy(true);
@@ -56,7 +80,7 @@ export default function Dashboard({ userName }: { userName: string }) {
       <div className="sidebar-scroll">{navSections.map(section => <div className="nav-group" key={section.title}><div className="nav-heading">{section.title}</div>{section.links.map(link => <button type="button" key={link.id} onClick={() => navigate(link.id)} className={`nav-link ${active===link.id?"active":""}`}><link.icon size={19} strokeWidth={1.85}/><span>{link.label}</span>{link.id === "approvals" && data && data.approvals.filter(a=>a.status==="PENDING").length>0 && <span className="nav-count">{fmt(data.approvals.filter(a=>a.status==="PENDING").length)}</span>}</button>)}</div>)}</div>
       <div className="sidebar-bottom"><button className={`nav-link ${active==="settings"?"active":""}`} onClick={() => navigate("settings")}><Settings2 size={19}/> تنظیمات</button><button className="nav-link" onClick={()=>signOut({callbackUrl:"/login"})}><LogOut size={19}/> خروج از حساب</button><div className="sidebar-help"><div className="help-icon"><CircleHelp size={20}/></div><div><strong>همه‌چیز تحت کنترل</strong><small>از برنامه‌ریزی تا تحویل نهایی</small></div></div></div>
     </aside>
-    <div className="app-main"><header className="topbar"><div className="topbar-start"><button className="icon-btn mobile-menu" aria-label="نمایش منو" onClick={()=>setMenuOpen(true)}><Menu size={22}/></button><div className="breadcrumb"><span>{data?.workspace.name || "فضای کاری"}</span><span className="breadcrumb-sep">/</span><strong>{headings[active][0]}</strong></div></div><div className="topbar-end"><button className="top-search" onClick={()=>setSearchOpen(true)}><Search size={18}/><span>جستجو در وظایف...</span><kbd>⌘ K</kbd></button><div className="pop-anchor"><button className="icon-btn bell-btn" aria-label="اعلان‌ها" onClick={()=>setNoticesOpen(v=>!v)}><Bell size={20}/>{unread>0 && <i/>}</button>{noticesOpen && <div className="notice-popover"><div className="pop-head"><strong>اعلان‌ها</strong><span>{fmt(unread)} خوانده‌نشده</span></div><div className="notice-list">{data?.notifications.length?data.notifications.map(n=><button key={n.id} className={`notice-item ${!n.readAt?"new":""}`} onClick={async()=>{await action("PATCH",`/notifications/${n.id}`);setNoticesOpen(false); router.push(n.href)}}><span className="notice-icon"><Bell size={15}/></span><span><strong>{n.title}</strong><small>{n.body}</small><small>{faDate(n.createdAt)}</small></span></button>):<div className="empty-small">اعلان جدیدی ندارید.</div>}</div></div>}</div><div className="topbar-divider"/><div className="profile-top"><span className="avatar" style={{background:"#dce6ff",color:"#345cc0"}}>{userName.slice(0,1)}</span><div><strong>{userName}</strong><small>{data?.role === "OWNER" ? "مالک فضا" : "عضو تیم"}</small></div></div></div></header>
+    <div className="app-main"><header className="topbar"><div className="topbar-start"><button className="icon-btn mobile-menu" aria-label="نمایش منو" onClick={()=>setMenuOpen(true)}><Menu size={22}/></button><div className="breadcrumb"><span>{data?.workspace.name || "فضای کاری"}</span><span className="breadcrumb-sep">/</span><strong>{headings[active][0]}</strong></div></div><div className="topbar-end"><button className="top-search" onClick={()=>setSearchOpen(true)}><Search size={18}/><span>جستجو در وظایف...</span><kbd>⌘ K</kbd></button><div className="pop-anchor"><button className="icon-btn bell-btn" aria-label="اعلان‌ها" onClick={()=>setNoticesOpen(v=>!v)}><Bell size={20}/>{unread>0 && <i/>}</button>{noticesOpen && <div className="notice-popover"><div className="pop-head"><strong>اعلان‌ها</strong><span>{fmt(unread)} خوانده‌نشده</span>{unread>0 && <button className="notice-read-all" onClick={()=>void action("PATCH","/notifications/read-all").catch(()=>{})}>خواندن همه</button>}</div><div className="notice-list">{data?.notifications.length?data.notifications.map(n=><button key={n.id} className={`notice-item ${!n.readAt?"new":""}`} onClick={async()=>{await action("PATCH",`/notifications/${n.id}`);setNoticesOpen(false); router.push(n.href)}}><span className="notice-icon"><Bell size={15}/></span><span><strong>{n.title}</strong><small>{n.body}</small><small>{faDate(n.createdAt)}</small></span></button>):<div className="empty-small">اعلان جدیدی ندارید.</div>}</div></div>}</div><div className="topbar-divider"/><div className="profile-top"><span className="avatar" style={{background:"#dce6ff",color:"#345cc0"}}>{userName.slice(0,1)}</span><div><strong>{userName}</strong><small>{data?.role === "OWNER" ? "مالک فضا" : "عضو تیم"}</small></div></div></div></header>
       <div className="main-scroll"><div className="content-container"><div className="page-heading"><div><div className="eyebrow"><span className="pulse-dot"/> محیط کاری شما <span className="heading-dash">/</span> {new Intl.DateTimeFormat("fa-IR", { weekday:"long", day:"numeric", month:"long" }).format(new Date())}</div><h1>{headings[active][0]}</h1><p>{headings[active][1]}</p></div><div className="heading-action">{["overview","projects"].includes(active) ? <button className="btn btn-primary" onClick={()=>open("project")}>پروژه جدید <Plus size={18}/></button> : ["tasks","board","calendar","timeline"].includes(active) ? <button className="btn btn-primary" onClick={()=>open("task")}>وظیفه جدید <Plus size={18}/></button> : active==="team"?<button className="btn btn-primary" onClick={()=>open("team")}>افزودن عضو <Plus size={18}/></button> : active==="approvals"?<button className="btn btn-primary" onClick={()=>open("approval")}>درخواست تأیید <Plus size={18}/></button> : active==="time"?<button className="btn btn-primary" onClick={()=>open("time")}>ثبت زمان <Plus size={18}/></button> : active==="clients"?<button className="btn btn-primary" onClick={()=>open("client")}>مشتری جدید <Plus size={18}/></button> : active==="finance"?<button className="btn btn-primary" onClick={()=>open("contract")}>قرارداد جدید <Plus size={18}/></button>:null}</div></div>
       {error && <div className="alert-error"><Activity size={18}/><span>{error}</span><button onClick={()=>{setLoading(true);void refresh()}}>تلاش مجدد <ArrowLeft size={16}/></button></div>}
       {loading && !data ? <div className="loading-skeleton"><div/><div/><div/><div/></div> : props ? <>

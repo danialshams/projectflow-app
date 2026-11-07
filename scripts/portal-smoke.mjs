@@ -44,6 +44,12 @@ async function main() {
 
   const internalApi = await fetch(base + "/api/v1/bootstrap", { headers: { Cookie: cookie } });
   assert.equal(internalApi.status, 401, "customer cookie cannot enter team API");
+  const privateNotices = await fetch(base + "/api/v1/notifications", { headers: { Cookie: cookie } });
+  assert.equal(privateNotices.status, 401, "customer cookie cannot read internal notifications");
+  const privateMutation = await fetch(base + "/api/v1/notifications/read-all", {
+    method: "PATCH", headers: { Cookie: cookie }
+  });
+  assert.equal(privateMutation.status, 401, "customer cookie cannot modify team notifications");
 
   await db.clientPortalSession.update({ where: { id: session.id }, data: { revokedAt: new Date() } });
   const revoked = await fetch(base + "/portal", { headers: { Cookie: cookie } });
